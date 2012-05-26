@@ -13,9 +13,8 @@
  * Press Release Wordpress plugin, 2012
  */
 
-require(dirname(dirname(dirname(dirname(dirname($_SERVER['SCRIPT_FILENAME']))))) . '/wp-admin/admin.php');
+require($_SERVER['DOCUMENT_ROOT'] . '/blog/wp-admin/admin.php');
 global $wpdb;
-global $uploads_dir_array;
 
 class UploadHandler
 {
@@ -25,9 +24,9 @@ class UploadHandler
 		$uploads_dir_array = wp_upload_dir();
 				
         $this->options = array(
-            'script_url' => $this->getFullUrl().'/',
-						'upload_dir' => $uploads_dir_array['basedir'] . '/press-release/',
-						'upload_url' => $uploads_dir_array['baseurl'] . '/press-release/',
+            'script_url' => site_url('/wp-content/plugins/pr-manager/upload/'),
+			'upload_dir' => $uploads_dir_array['basedir'] . '/press-release/',
+			'upload_url' => $uploads_dir_array['baseurl'] . '/press-release/',
             'param_name' => 'files',
             // Set the following option to 'POST', if your server does not support
             // DELETE requests. This is a parameter sent to the client:
@@ -36,7 +35,7 @@ class UploadHandler
             // take precedence over the following max_file_size setting:
             'max_file_size' => null,
             'min_file_size' => 1,
-						'accept_file_types' => '/(pdf)$/i',
+			'accept_file_types' => '/(pdf)$/i',
             'max_number_of_files' => null,
             // Set the following option to false to enable resumable uploads:
             'discard_aborted_uploads' => true
@@ -44,57 +43,33 @@ class UploadHandler
         if ($options) {
             $this->options = array_replace_recursive($this->options, $options);
         }
-    }
-
-    protected function getFullUrl() {
-      	return
-    		(isset($_SERVER['HTTPS']) ? 'https://' : 'http://').
-    		(isset($_SERVER['REMOTE_USER']) ? $_SERVER['REMOTE_USER'].'@' : '').
-    		(isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : ($_SERVER['SERVER_NAME'].
-    		(isset($_SERVER['HTTPS']) && $_SERVER['SERVER_PORT'] === 443 ||
-    		$_SERVER['SERVER_PORT'] === 80 ? '' : ':'.$_SERVER['SERVER_PORT']))).
-    		substr($_SERVER['SCRIPT_NAME'],0, strrpos($_SERVER['SCRIPT_NAME'], '/'));
-    }
-		
-		protected function getUploadFullUrl() {
-				return
-			(isset($_SERVER['HTTPS']) ? 'https://' : 'http://').
-			(isset($_SERVER['REMOTE_USER']) ? $_SERVER['REMOTE_USER'].'@' : '').
-			(isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : ($_SERVER['SERVER_NAME'].
-			(isset($_SERVER['HTTPS']) && $_SERVER['SERVER_PORT'] === 443 ||
-			$_SERVER['SERVER_PORT'] === 80 ? '' : ':'.$_SERVER['SERVER_PORT']))).
-				dirname(dirname(dirname($_SERVER['REQUEST_URI']))) . '/uploads';
-		}
-
-    protected function set_file_delete_url($file) {
-        $file->delete_url = $this->options['script_url']
-            .'?file='.rawurlencode($file->name);
-        $file->delete_type = $this->options['delete_type'];
-        if ($file->delete_type !== 'DELETE') {
-            $file->delete_url .= '&_method=DELETE';
+        
+        // Make sure upload directory exists, otherwise create it
+        if (!is_dir($this->options['upload_dir'])) {
+        	mkdir($this->options['upload_dir']);
         }
     }
 
     protected function get_file_object($file_name) {
-				global $wpdb;
+		global $wpdb;
 				
-				$pr_db_tablename = $wpdb->prefix . 'pr_manager';
-				$db_row = $wpdb->get_row("SELECT * FROM $pr_db_tablename WHERE filename = '$file_name'");
+		$pr_db_tablename = $wpdb->prefix . 'pr_manager';
+		$db_row = $wpdb->get_row("SELECT * FROM $pr_db_tablename WHERE filename = '$file_name'");
 				
-				if($db_row != null) {
-					$description = $db_row->title;
-					$date = $db_row->date;
-				} else {
-					$description = $file_name;
-					$date = date_i18n('m/d/y');
-				}
+		if($db_row != null) {
+			$description = $db_row->title;
+			$date = $db_row->date;
+		} else {
+			$description = $file_name;
+			$date = date_i18n('m/d/y');
+		}
 			
         $file_path = $this->options['upload_dir'].$file_name;
         if (is_file($file_path) && $file_name[0] !== '.') {
             $file = new stdClass();
             $file->name = $file_name;
-						$file->description = $description;
-						$file->date = $date;
+			$file->description = $description;
+			$file->date = $date;
             $file->size = filesize($file_path);
             $file->url = $this->options['upload_url'].rawurlencode($file->name);
             $this->set_file_delete_url($file);
