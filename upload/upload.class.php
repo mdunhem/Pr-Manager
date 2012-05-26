@@ -158,7 +158,10 @@ class UploadHandler
         }
         return $file_name;
     }
-
+    
+    /*
+     *	Function to save to the database
+     */
     protected function handle_form_data($file, $index) {
 				global $wpdb;				
 				$pr_db_tablename = $wpdb->prefix . 'pr_manager';
