@@ -13,8 +13,9 @@
  * Press Release Wordpress plugin, 2012
  */
 
-require($_SERVER['DOCUMENT_ROOT'] . '/blog/wp-admin/admin.php');
-global $wpdb;
+// Need access to Wordpress functions
+// Looks ugly but is used in case Wordpress isn't installed in root
+require($_SERVER['DOCUMENT_ROOT'] . dirname(dirname(dirname(dirname(dirname($_SERVER['PHP_SELF']))))) . '/wp-admin/admin.php');
 
 class UploadHandler
 {
@@ -35,6 +36,7 @@ class UploadHandler
             // take precedence over the following max_file_size setting:
             'max_file_size' => null,
             'min_file_size' => 1,
+            // Only accept PDF's
 			'accept_file_types' => '/(pdf)$/i',
             'max_number_of_files' => null,
             // Set the following option to false to enable resumable uploads:
