@@ -26,8 +26,8 @@ class UploadHandler
 				
         $this->options = array(
             'script_url' => site_url('/wp-content/plugins/pr-manager/upload/'),
-			'upload_dir' => $uploads_dir_array['basedir'] . '/press-release/',
-			'upload_url' => $uploads_dir_array['baseurl'] . '/press-release/',
+	    'upload_dir' => $uploads_dir_array['basedir'] . '/press-release/',
+	    'upload_url' => $uploads_dir_array['baseurl'] . '/press-release/',
             'param_name' => 'files',
             // Set the following option to 'POST', if your server does not support
             // DELETE requests. This is a parameter sent to the client:
@@ -37,7 +37,7 @@ class UploadHandler
             'max_file_size' => null,
             'min_file_size' => 1,
             // Only accept PDF's
-			'accept_file_types' => '/(pdf)$/i',
+	    'accept_file_types' => '/(pdf)$/i',
             'max_number_of_files' => null,
             // Set the following option to false to enable resumable uploads:
             'discard_aborted_uploads' => true
@@ -70,8 +70,8 @@ class UploadHandler
         if (is_file($file_path) && $file_name[0] !== '.') {
             $file = new stdClass();
             $file->name = $file_name;
-			$file->description = $description;
-			$file->date = $date;
+	    $file->description = $description;
+	    $file->date = $date;
             $file->size = filesize($file_path);
             $file->url = $this->options['upload_url'].rawurlencode($file->name);
             $this->set_file_delete_url($file);
