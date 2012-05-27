@@ -4,7 +4,7 @@ Plugin Name: Press Release Manager
 Plugin URI: http://www.arielway.com
 Description: Admin menu page plugin for uploading Ariel Way, Inc. Press Releases to website.
 Author: Mikael Dunhem
-Version: 1.0.0
+Version: 1.1
 Author URI: http://www.arielway.com
 License: GPL2
 
@@ -30,26 +30,28 @@ require_once( dirname( __FILE__ ) . '/include/constants.php' );
 // Create new instance of Pr_Manager and hand off control
 if( !isset( $pr_manager ) ) {
 	Pr_Manager::instance();
+	register_uninstall_hook(__FILE__, array('Pr_Manager', 'uninstall'));
 }
 
 class Pr_Manager {
 	protected $options;
 	
 	public function __construct($options = null) {
+		global $wpdb;
 		// Set up class variables
 		$this->options = array(
 				'version' => PR_MANAGER_VERSION,
 				'title' => 'Upload New Press Release',
 				'sub-title' => 'New Press Release',
 				'page-name' => 'pr-manager',
-				'company-name' => 'Ariel Way, Inc.'
+				'company-name' => 'Ariel Way, Inc.',
+				'db-table-name' => PR_DB_TABLE_NAME
 		);
 		if ($options) {
 				$this->options = array_replace_recursive($this->options, $options);
 		}
 		
 		$this->add_actions();
-		//register_activation_hook(__FILE__, array(&$this, 'install'));
 	}
 	
 	protected function add_actions() {		
@@ -71,9 +73,7 @@ class Pr_Manager {
 	 *
 	 */
 	protected function install() {
-		global $wpdb;
-		$pr_db_tablename = $wpdb->prefix . 'pr_manager';
-		$sql = "CREATE TABLE " . $pr_db_tablename . " (
+		$sql = "CREATE TABLE " . $this->options['db-table-name'] . " (
 			id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 			year text NOT NULL,
 			date text NOT NULL,
@@ -89,14 +89,16 @@ class Pr_Manager {
 		update_option('pr_manager_version', $this->options['version']);
 	}
 	
-	public function uninstall() {
+	static function uninstall() {
 		// TODO: create uninstall method
+		delete_option('pr_manager_version');
+		//$sql = $wpdb->query('DROP TABLE IF EXISTS ' . $this->options['db-table-name'] . ';');
 	}
 	
 	public function init() {
 		// Check if current version is correct, otherwise run the install function
 		$current_installed_version = get_option('pr_manager_version');
-		if((!$current_installed_version) || ($current_installed_version != $this->options['version'])) {
+		if((!$current_installed_version) || ($current_installed_version > $this->options['version'])) {
 			$this->install();
 		}
 	}
